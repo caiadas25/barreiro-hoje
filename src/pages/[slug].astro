@@ -1,0 +1,52 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const digests = await getCollection('digests');
+  return digests.map((digest) => ({
+    params: { slug: digest.id },
+    props: { digest },
+  }));
+}
+
+const { digest } = Astro.props;
+const { Content } = await render(digest);
+---
+
+<Layout title={`${digest.data.title} - Barreiro Digest`}>
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <a href="/" class="text-[#FF8C2F] hover:underline mb-4 inline-block">← Voltar</a>
+    
+    <article class="bg-[#252525] rounded-lg p-6 border border-[#333333]">
+      <time class="text-sm text-[#999999]">
+        {new Date(digest.data.date).toLocaleDateString('pt-PT', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}
+      </time>
+      <h1 class="text-3xl font-bold mt-2 mb-6">{digest.data.title}</h1>
+      
+      <div class="prose prose-invert max-w-none">
+        <Content />
+      </div>
+
+      {digest.data.sources && digest.data.sources.length > 0 && (
+        <footer class="mt-8 pt-4 border-t border-[#333333]">
+          <h3 class="text-sm font-semibold text-[#999999] mb-2">Fontes</h3>
+          <ul class="text-sm space-y-1">
+            {digest.data.sources.map((source) => (
+              <li>
+                <a href={source.url} target="_blank" rel="noopener noreferrer" class="text-[#FF8C2F]">
+                  {source.name} ↗
+                </a>
+              </li>
+            ))}
+          </ul>
+        </footer>
+      )}
+    </article>
+  </main>
+</Layout>

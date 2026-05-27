@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #1C1B1B;
+  --color-foreground: #ffffff;
+  --color-muted: #999999;
+  --color-accent: #FF8C2F;
+  --color-accent-hover: #f15a2c;
+  --color-border: #333333;
+  --color-card: #252525;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}

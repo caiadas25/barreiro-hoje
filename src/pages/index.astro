@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+const digests = (await getCollection('digests')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const latest = digests[0];
+const archive = digests.slice(1);
+
+const latestRender = latest ? await render(latest) : null;
+---
+
+<Layout title="Barreiro Digest">
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-[#FF8C2F]">Barreiro Digest</h1>
+      <p class="text-[#999999] mt-2">Notícias diárias do Barreiro</p>
+    </header>
+
+    {latest && latestRender && (
+      <article class="bg-[#252525] rounded-lg p-6 mb-8 border border-[#333333]">
+        <time class="text-sm text-[#999999]">
+          {new Date(latest.data.date).toLocaleDateString('pt-PT', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </time>
+        <h2 class="text-2xl font-semibold mt-2 mb-4">
+          <a href={`/${latest.id}`}>{latest.data.title}</a>
+        </h2>
+        <div class="prose prose-invert max-w-none">
+          <latestRender.Content />
+        </div>
+      </article>
+    )}
+
+    {archive.length > 0 && (
+      <section>
+        <h2 class="text-xl font-semibold mb-4 text-[#FF8C2F]">Arquivo</h2>
+        <ul class="space-y-2">
+          {archive.map((digest) => (
+            <li>
+              <a href={`/${digest.id}`} class="flex items-center gap-3 text-[#999999] hover:text-white">
+                <time class="text-sm w-32">
+                  {new Date(digest.data.date).toLocaleDateString('pt-PT')}
+                </time>
+                <span>{digest.data.title}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </main>
+</Layout>
