@@ -17,6 +17,9 @@ const latestRender = latest ? await render(latest) : null;
     <header class="mb-8">
       <h1 class="text-3xl font-bold text-[#FF8C2F]">Barreiro Digest</h1>
       <p class="text-[#999999] mt-2">Notícias diárias do Barreiro</p>
+      <a href="/mapa" class="inline-flex items-center gap-2 mt-3 text-sm text-[#FF8C2F] hover:underline">
+        🗺️ Mapa das Freguesias
+      </a>
     </header>
 
     {latest && latestRender && (

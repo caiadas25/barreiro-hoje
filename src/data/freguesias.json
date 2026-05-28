@@ -1,0 +1,58 @@
+[
+  {
+    "id": "alto-do-seixalinho",
+    "name": "Alto do Seixalinho, Santo André e Verderena",
+    "shortName": "Alto do Seixalinho",
+    "dicofre": "150409",
+    "population_2021": 11259,
+    "area_km2": 7.18,
+    "website": "https://www.cm-barreiro.pt",
+    "phone": "+351 212 314 950",
+    "email": "junta.asv@cm-barreiro.pt",
+    "address": "Rua 5 de Outubro, Alto do Seixalinho, 2830-102 Barreiro",
+    "componentParishes": ["Alto do Seixalinho", "Santo André", "Verderena"],
+    "color": "#e67e22"
+  },
+  {
+    "id": "barreiro-lavradio",
+    "name": "União de Freguesias de Barreiro e Lavradio",
+    "shortName": "Barreiro e Lavradio",
+    "dicofre": "150410",
+    "population_2021": 13607,
+    "area_km2": 7.74,
+    "website": "https://www.cm-barreiro.pt",
+    "phone": "+351 212 314 960",
+    "email": "juntabarreiro@cm-barreiro.pt",
+    "address": "Rua de São João de Brito, 2830-087 Barreiro",
+    "componentParishes": ["Barreiro", "Lavradio"],
+    "color": "#3498db"
+  },
+  {
+    "id": "palhais-colina",
+    "name": "União de Freguesias de Palhais e Coina",
+    "shortName": "Palhais e Coina",
+    "dicofre": "150411",
+    "population_2021": 4214,
+    "area_km2": 13.78,
+    "website": "https://www.cm-barreiro.pt",
+    "phone": "+351 212 314 970",
+    "email": "juntapalhais@cm-barreiro.pt",
+    "address": "Largo da Igreja, Palhais, 2830-382 Barreiro",
+    "componentParishes": ["Palhais", "Coina"],
+    "color": "#2ecc71"
+  },
+  {
+    "id": "santo-antonio-charneca",
+    "name": "Freguesia de Santo António da Charneca",
+    "shortName": "Santo António da Charneca",
+    "dicofre": "150407",
+    "population_2021": 12386,
+    "area_km2": 7.70,
+    "website": "https://www.cm-barreiro.pt",
+    "phone": "+351 212 314 980",
+    "email": "junta.charneca@cm-barreiro.pt",
+    "address": "Largo da República, Santo António da Charneca, 2830-581 Barreiro",
+    "componentParishes": ["Santo António da Charneca"],
+    "color": "#9b59b6"
+  }
+]
