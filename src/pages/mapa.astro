@@ -73,6 +73,12 @@ const totalArea = freguesias.reduce((sum, f) => sum + f.area_km2, 0);
           </svg>
         </div>
         <p class="text-xs text-[#666] mt-2 text-center">Clique numa freguesia para ver detalhes</p>
+        
+        <!-- Hover tooltip -->
+        <div id="map-tooltip" class="fixed pointer-events-none z-50 bg-[#1C1B1B] border border-[#333333] rounded-lg px-3 py-2 shadow-xl opacity-0 transition-opacity duration-150">
+          <p id="tooltip-name" class="text-sm font-semibold text-white"></p>
+          <p id="tooltip-pop" class="text-xs text-[#999999]"></p>
+        </div>
       </div>
 
       <!-- Detail panel -->
@@ -184,6 +190,9 @@ const totalArea = freguesias.reduce((sum, f) => sum + f.area_km2, 0);
   const cards = document.querySelectorAll('.freg-card');
 
   let activeRegion = null;
+  const tooltip = document.getElementById('map-tooltip');
+  const tooltipName = document.getElementById('tooltip-name');
+  const tooltipPop = document.getElementById('tooltip-pop');
 
   function safeValue(val, fallback) {
     return val && val !== 'VERIFICAR' ? val : fallback;
@@ -304,6 +313,7 @@ const totalArea = freguesias.reduce((sum, f) => sum + f.area_km2, 0);
   // Map region clicks
   regions.forEach(region => {
     region.addEventListener('click', () => {
+      tooltip.style.opacity = '0';
       const id = region.dataset.id;
       if (id === activeRegion) {
         resetMap();
@@ -325,16 +335,30 @@ const totalArea = freguesias.reduce((sum, f) => sum + f.area_km2, 0);
       }
     });
 
-    region.addEventListener('mouseenter', () => {
+    region.addEventListener('mouseenter', (e) => {
       if (region.dataset.id !== activeRegion) {
         region.setAttribute('fill-opacity', '0.8');
       }
+      // Show tooltip
+      const id = region.dataset.id;
+      const f = freguesiasMap[id];
+      if (f) {
+        tooltipName.textContent = f.shortName;
+        tooltipPop.textContent = f.population.toLocaleString('pt-PT') + ' hab. · ' + f.area_km2.toFixed(1) + ' km²';
+        tooltip.style.opacity = '1';
+      }
+    });
+
+    region.addEventListener('mousemove', (e) => {
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top = (e.clientY - 8) + 'px';
     });
 
     region.addEventListener('mouseleave', () => {
       if (region.dataset.id !== activeRegion) {
         region.setAttribute('fill-opacity', '0.6');
       }
+      tooltip.style.opacity = '0';
     });
   });
 
