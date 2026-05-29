@@ -6,47 +6,48 @@ export async function getStaticPaths() {
   const digests = await getCollection('digests');
   return digests.map((digest) => ({
     params: { slug: digest.id },
-    props: { digest },
+    props:  { digest },
   }));
 }
 
 const { digest } = Astro.props;
 const { Content } = await render(digest);
+
+const fmtDate = (iso: string) =>
+  new Date(iso + 'T00:00:00').toLocaleDateString('pt-PT', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
 ---
 
-<Layout title={`${digest.data.title} - Barreiro Digest`}>
-  <main class="max-w-4xl mx-auto px-4 py-8">
-    <a href="/" class="text-[#FF8C2F] hover:underline mb-4 inline-block">← Voltar</a>
-    
-    <article class="bg-[#252525] rounded-lg p-6 border border-[#333333]">
-      <time class="text-sm text-[#999999]">
-        {new Date(digest.data.date).toLocaleDateString('pt-PT', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })}
-      </time>
-      <h1 class="text-3xl font-bold mt-2 mb-6">{digest.data.title}</h1>
-      
-      <div class="prose prose-invert max-w-none">
+<Layout title={`${digest.data.title} — Barreiro Digest`} activeNav="arquivo">
+  <main class="wrap fade-in" style="padding-bottom:64px;">
+
+    <div class="pagehead" style="padding-bottom:8px;">
+      <a href="/" class="btn btn-secondary" style="padding:7px 16px;font-size:13px;">← Voltar</a>
+    </div>
+
+    <div class="digest-card">
+      <div class="digest-date">{fmtDate(digest.data.date)}</div>
+      <h1 class="digest-title" style="font-size:clamp(26px,4vw,36px);">{digest.data.title}</h1>
+
+      <div class="digest-prose" style="margin-top:24px;">
         <Content />
       </div>
 
       {digest.data.sources && digest.data.sources.length > 0 && (
-        <footer class="mt-8 pt-4 border-t border-[#333333]">
-          <h3 class="text-sm font-semibold text-[#999999] mb-2">Fontes</h3>
-          <ul class="text-sm space-y-1">
-            {digest.data.sources.map((source) => (
-              <li>
-                <a href={source.url} target="_blank" rel="noopener noreferrer" class="text-[#FF8C2F]">
-                  {source.name} ↗
-                </a>
-              </li>
+        <div class="sources-block">
+          <h3 class="sources-label">Fontes</h3>
+          <div>
+            {digest.data.sources.map((s) => (
+              <a href={s.url} target="_blank" rel="noopener" class="source-link">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                {s.name}
+              </a>
             ))}
-          </ul>
-        </footer>
+          </div>
+        </div>
       )}
-    </article>
+    </div>
+
   </main>
 </Layout>

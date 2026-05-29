@@ -6,57 +6,81 @@ const digests = (await getCollection('digests')).sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
 );
 
-const latest = digests[0];
+const latest  = digests[0];
 const archive = digests.slice(1);
 
 const latestRender = latest ? await render(latest) : null;
+const LatestContent = latestRender?.Content;
+
+const fmtDate  = (iso: string) =>
+  new Date(iso + 'T00:00:00').toLocaleDateString('pt-PT', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+const fmtShort = (iso: string) =>
+  new Date(iso + 'T00:00:00').toLocaleDateString('pt-PT', {
+    day: '2-digit', month: 'short',
+  });
+
+const countStories = (body: string) => (body.match(/^### /gm) || []).length;
 ---
 
-<Layout title="Barreiro Digest">
-  <main class="max-w-4xl mx-auto px-4 py-8">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold text-[#FF8C2F]">Barreiro Digest</h1>
-      <p class="text-[#999999] mt-2">Notícias diárias do Barreiro</p>
-      <a href="/mapa" class="inline-flex items-center gap-2 mt-3 text-sm text-[#FF8C2F] hover:underline">
-        🗺️ Mapa das Freguesias
-      </a>
-    </header>
+<Layout title="Barreiro Digest" activeNav="hoje">
+  <main class="wrap fade-in" style="padding-bottom:64px;">
 
-    {latest && latestRender && (
-      <article class="bg-[#252525] rounded-lg p-6 mb-8 border border-[#333333]">
-        <time class="text-sm text-[#999999]">
-          {new Date(latest.data.date).toLocaleDateString('pt-PT', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </time>
-        <h2 class="text-2xl font-semibold mt-2 mb-4">
-          <a href={`/${latest.id}`}>{latest.data.title}</a>
-        </h2>
-        <div class="prose prose-invert max-w-none">
-          <latestRender.Content />
+    <div class="pagehead">
+      <div class="eyebrow">Edição de hoje</div>
+      <h1 class="page-title">Notícias do Barreiro</h1>
+      <p class="page-sub">O essencial do município, todos os dias. Câmara, transportes, obras e eventos — num só lugar.</p>
+    </div>
+
+    {latest && LatestContent && (
+      <div class="digest-card">
+        <div class="digest-date">{fmtDate(latest.data.date)}</div>
+        <h2 class="digest-title">{latest.data.title}</h2>
+
+        <div class="digest-prose" style="margin-top:20px;">
+          <LatestContent />
         </div>
-      </article>
+
+        {latest.data.sources && latest.data.sources.length > 0 && (
+          <div class="sources-block">
+            <h3 class="sources-label">Fontes</h3>
+            <div>
+              {latest.data.sources.map((s) => (
+                <a href={s.url} target="_blank" rel="noopener" class="source-link">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                  {s.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style="margin-top:20px;">
+          <a href={`/${latest.id}`} class="btn btn-secondary" style="font-size:13.5px;">
+            Ver edição completa →
+          </a>
+        </div>
+      </div>
     )}
 
     {archive.length > 0 && (
-      <section>
-        <h2 class="text-xl font-semibold mb-4 text-[#FF8C2F]">Arquivo</h2>
-        <ul class="space-y-2">
-          {archive.map((digest) => (
-            <li>
-              <a href={`/${digest.id}`} class="flex items-center gap-3 text-[#999999] hover:text-white">
-                <time class="text-sm w-32">
-                  {new Date(digest.data.date).toLocaleDateString('pt-PT')}
-                </time>
-                <span>{digest.data.title}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+      <section style="margin-top:48px;">
+        <h3 class="section-label">Arquivo recente</h3>
+        {archive.map((d) => {
+          const n = countStories(d.body || '');
+          return (
+            <a href={`/${d.id}`} class="arch-row">
+              <span class="arch-date">{fmtShort(d.data.date)}</span>
+              <span class="arch-title">{d.data.title.replace(/ —.*/, '')}</span>
+              {n > 0 && (
+                <span class="arch-count">{n} {n === 1 ? 'notícia' : 'notícias'}</span>
+              )}
+            </a>
+          );
+        })}
       </section>
     )}
+
   </main>
 </Layout>

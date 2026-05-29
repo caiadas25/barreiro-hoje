@@ -3,374 +3,282 @@ import Layout from '../layouts/Layout.astro';
 import mapData from '../data/barreiro-map.json';
 import freguesias from '../data/freguesias.json';
 
-const totalPop = freguesias.reduce((sum, f) => sum + f.population, 0);
-const totalArea = freguesias.reduce((sum, f) => sum + f.area_km2, 0);
+const totalPop  = freguesias.reduce((s, f) => s + f.population, 0);
+const totalArea = freguesias.reduce((s, f) => s + f.area_km2, 0);
+
+// Emblem parish colors keyed by id
+const FREG_COLORS: Record<string, string> = {
+  'alto-do-seixalinho':     '#BDA15A',
+  'barreiro-lavradio':      '#5C7FA0',
+  'palhais-coina':          '#8FA987',
+  'santo-antonio-charneca': '#8A7A99',
+};
 ---
 
-<Layout title="Mapa de Barreiro - Barreiro Digest">
-  <main class="max-w-6xl mx-auto px-4 py-8">
-    <header class="mb-8">
-      <a href="/" class="text-[#FF8C2F] hover:underline text-sm">← Voltar</a>
-      <h1 class="text-3xl font-bold text-[#FF8C2F] mt-4">Mapa de Barreiro</h1>
-      <p class="text-[#999999] mt-2">As {freguesias.length} freguesias do município</p>
-    </header>
+<Layout title="Mapa das Freguesias — Barreiro Digest" activeNav="mapa">
+  <main class="wrap-wide fade-in" style="padding-bottom:64px;">
+
+    <div class="pagehead">
+      <div class="eyebrow">O município</div>
+      <h1 class="page-title">Mapa das Freguesias</h1>
+      <p class="page-sub">As quatro freguesias do Barreiro — população, área e contactos das juntas.</p>
+    </div>
 
     <!-- Stats bar -->
-    <div class="flex gap-6 mb-8 text-sm">
-      <div class="bg-[#252525] rounded-lg px-4 py-3 border border-[#333333]">
-        <span class="text-[#999999]">População</span>
-        <span class="text-white font-semibold ml-2">{totalPop.toLocaleString('pt-PT')}</span>
+    <div class="statbar">
+      <div class="stat-card">
+        <div class="stat-label">População</div>
+        <div class="stat-value">{totalPop.toLocaleString('pt-PT')}</div>
       </div>
-      <div class="bg-[#252525] rounded-lg px-4 py-3 border border-[#333333]">
-        <span class="text-[#999999]">Área</span>
-        <span class="text-white font-semibold ml-2">{totalArea.toFixed(1)} km²</span>
+      <div class="stat-card">
+        <div class="stat-label">Área</div>
+        <div class="stat-value">{totalArea.toFixed(1)} km²</div>
       </div>
-      <div class="bg-[#252525] rounded-lg px-4 py-3 border border-[#333333]">
-        <span class="text-[#999999]">Freguesias</span>
-        <span class="text-white font-semibold ml-2">{freguesias.length}</span>
+      <div class="stat-card">
+        <div class="stat-label">Freguesias</div>
+        <div class="stat-value">{freguesias.length}</div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-      <!-- Map column -->
-      <div class="lg:col-span-3">
-        <div class="bg-[#252525] rounded-lg p-4 border border-[#333333]">
-          <svg 
+    <div class="map-grid">
+      <!-- Map -->
+      <div>
+        <div class="map-panel">
+          <svg
             viewBox={mapData.viewBox}
-            class="w-full h-auto"
+            style="width:100%;height:auto;"
             id="barreiro-map"
             role="img"
             aria-label="Mapa das freguesias de Barreiro"
           >
-            {mapData.regions.map((region) => (
-              <path
-                d={region.path}
-                fill={region.color}
-                fill-opacity="0.6"
-                stroke="#1C1B1B"
-                stroke-width="2"
-                class="map-region cursor-pointer transition-all duration-200"
-                data-id={region.id}
-                data-name={region.name}
-                data-full-name={region.fullName}
-                data-color={region.color}
-                tabindex="0"
-                role="button"
-                aria-label={region.fullName}
-              />
-            ))}
-            {mapData.regions.map((region) => (
+            {mapData.regions.map((r) => {
+              const col = FREG_COLORS[r.id] || r.color;
+              return (
+                <path
+                  d={r.path}
+                  fill={col}
+                  fill-opacity="0.62"
+                  stroke="var(--color-paper)"
+                  stroke-width="2"
+                  class="map-region"
+                  data-id={r.id}
+                  data-color={col}
+                  tabindex="0"
+                  role="button"
+                  aria-label={r.name}
+                />
+              );
+            })}
+            {mapData.regions.map((r) => (
               <text
-                x={region.centerX}
-                y={region.centerY}
+                x={r.centerX}
+                y={r.centerY}
                 text-anchor="middle"
                 dominant-baseline="middle"
-                class="pointer-events-none select-none text-[11px] font-semibold fill-white drop-shadow-lg"
+                class="map-label"
               >
-                {region.name}
+                {r.name}
               </text>
             ))}
           </svg>
         </div>
-        <p class="text-xs text-[#666] mt-2 text-center">Clique numa freguesia para ver detalhes</p>
-        
-        <!-- Hover tooltip -->
-        <div id="map-tooltip" class="fixed pointer-events-none z-50 bg-[#1C1B1B] border border-[#333333] rounded-lg px-3 py-2 shadow-xl opacity-0 transition-opacity duration-150">
-          <p id="tooltip-name" class="text-sm font-semibold text-white"></p>
-          <p id="tooltip-pop" class="text-xs text-[#999999]"></p>
+        <p class="map-hint">Clique numa freguesia para ver detalhes</p>
+
+        <!-- Tooltip -->
+        <div id="map-tooltip" class="map-tooltip">
+          <div id="tooltip-name" class="tooltip-name"></div>
+          <div id="tooltip-sub"  class="tooltip-sub"></div>
         </div>
       </div>
 
-      <!-- Detail panel -->
-      <div class="lg:col-span-2">
-        <div id="detail-panel" class="bg-[#252525] rounded-lg border border-[#333333] overflow-hidden transition-all duration-300">
-          <!-- Default state -->
-          <div id="panel-default" class="p-6">
-            <h2 class="text-lg font-semibold text-[#FF8C2F] mb-3">Selecione uma freguesia</h2>
-            <p class="text-[#999999] text-sm">Clique no mapa ou nos cards abaixo para ver informações de contacto e dados populacionais.</p>
+      <!-- Detail + quick-access column -->
+      <div>
+        <!-- Default state -->
+        <div id="panel-default" class="detail-panel">
+          <div class="detail-name" style="font-size:18px;">Selecione uma freguesia</div>
+          <p style="font-size:14px;color:var(--color-ink-2);margin-top:8px;line-height:1.5;">
+            Clique no mapa ou nos cartões abaixo para ver dados populacionais e contactos.
+          </p>
+        </div>
+
+        <!-- Detail state (hidden until a parish is selected) -->
+        <div id="panel-detail" class="detail-panel" style="display:none;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span id="detail-dot"  class="freg-dot"></span>
+            <span id="detail-name" class="detail-name"></span>
+          </div>
+          <p id="detail-fullname" class="detail-fullname"></p>
+
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <div class="mini-stat-label">População</div>
+              <div id="detail-pop" class="mini-stat-value"></div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Área</div>
+              <div id="detail-area" class="mini-stat-value"></div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Densidade</div>
+              <div id="detail-density" class="mini-stat-value"></div>
+            </div>
           </div>
 
-          <!-- Detail state (hidden by default) -->
-          <div id="panel-detail" class="hidden">
-            <div class="p-6">
-              <div class="flex items-center gap-3 mb-4">
-                <div id="detail-color-dot" class="w-4 h-4 rounded-full"></div>
-                <h2 id="detail-name" class="text-lg font-semibold"></h2>
-              </div>
-              <p id="detail-full-name" class="text-xs text-[#666] mb-4 italic"></p>
+          <div class="detail-section">
+            <h4 class="detail-section-label">Presidente da Junta</h4>
+            <div id="detail-presidente" style="font-size:14px;color:var(--color-ink);font-weight:500;"></div>
+            <div id="detail-presidente-info" style="font-size:13px;color:var(--color-ink-3);margin-top:2px;"></div>
+          </div>
 
-              <!-- Stats: Population, Area, Density -->
-              <div class="grid grid-cols-3 gap-3 mb-5">
-                <div class="bg-[#1C1B1B] rounded-lg p-3">
-                  <span class="text-[10px] text-[#999999] uppercase tracking-wider">População</span>
-                  <p id="detail-population" class="text-xl font-bold text-white"></p>
-                  <p class="text-[9px] text-[#666]">Censos 2021</p>
-                </div>
-                <div class="bg-[#1C1B1B] rounded-lg p-3">
-                  <span class="text-[10px] text-[#999999] uppercase tracking-wider">Área</span>
-                  <p id="detail-area" class="text-xl font-bold text-white"></p>
-                </div>
-                <div class="bg-[#1C1B1B] rounded-lg p-3">
-                  <span class="text-[10px] text-[#999999] uppercase tracking-wider">Densidade</span>
-                  <p id="detail-density" class="text-xl font-bold text-white"></p>
-                  <p class="text-[9px] text-[#666]">hab/km²</p>
-                </div>
-              </div>
+          <div class="detail-section">
+            <h4 class="detail-section-label">Freguesias componente</h4>
+            <div id="detail-parishes" class="parish-tags"></div>
+          </div>
 
-              <!-- Presidente da Junta -->
-              <div id="detail-presidente-section" class="mb-5">
-                <h3 class="text-xs font-semibold text-[#999999] uppercase tracking-wider mb-2">Presidente da Junta</h3>
-                <div class="bg-[#1C1B1B] rounded-lg p-3">
-                  <p id="detail-presidente-name" class="text-sm text-white font-medium"></p>
-                  <p id="detail-presidente-info" class="text-xs text-[#999999] mt-1"></p>
-                </div>
-              </div>
-
-              <!-- Component parishes -->
-              <div id="detail-parishes-section" class="mb-5">
-                <h3 class="text-xs font-semibold text-[#999999] uppercase tracking-wider mb-2">Freguesias componente</h3>
-                <div id="detail-parishes" class="flex flex-wrap gap-2"></div>
-              </div>
-
-              <!-- Contact info -->
-              <div class="space-y-3">
-                <h3 class="text-xs font-semibold text-[#999999] uppercase tracking-wider">Contacto</h3>
-                
-                <div class="flex items-start gap-3 text-sm">
-                  <span class="text-[#FF8C2F] mt-0.5">📍</span>
-                  <span id="detail-address" class="text-[#ccc]"></span>
-                </div>
-                
-                <div class="flex items-center gap-3 text-sm">
-                  <span class="text-[#FF8C2F]">📞</span>
-                  <a id="detail-phone" href="" class="text-[#ccc] hover:text-[#FF8C2F]"></a>
-                </div>
-                
-                <div class="flex items-center gap-3 text-sm">
-                  <span class="text-[#FF8C2F]">✉️</span>
-                  <a id="detail-email" href="" class="text-[#ccc] hover:text-[#FF8C2F]"></a>
-                </div>
-                
-                <div class="flex items-center gap-3 text-sm">
-                  <span class="text-[#FF8C2F]">🌐</span>
-                  <a id="detail-website" href="" target="_blank" rel="noopener noreferrer" class="text-[#ccc] hover:text-[#FF8C2F]"></a>
-                </div>
-              </div>
+          <div class="detail-section">
+            <h4 class="detail-section-label">Contacto</h4>
+            <div class="contact-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+              <span id="detail-address"></span>
+            </div>
+            <div class="contact-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.72 19.79 19.79 0 0 1 1.06 4.1 2 2 0 0 1 3 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a id="detail-phone" href=""></a>
+            </div>
+            <div class="contact-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <a id="detail-email" href=""></a>
+            </div>
+            <div class="contact-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <a id="detail-website" href="" target="_blank" rel="noopener"></a>
             </div>
           </div>
         </div>
 
         <!-- Quick-access cards -->
-        <div class="mt-4 space-y-2">
-          {freguesias.map((f) => (
-            <button
-              class="freg-card w-full text-left bg-[#252525] rounded-lg p-3 border border-[#333333] hover:border-[#FF8C2F] transition-colors cursor-pointer"
-              data-id={f.id}
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full" style={`background-color: ${f.color}`}></div>
-                <span class="text-sm font-medium text-white">{f.shortName}</span>
-                <span class="text-xs text-[#999999] ml-auto">{f.population.toLocaleString('pt-PT')} hab.</span>
-              </div>
-            </button>
-          ))}
+        <div style="margin-top:14px;" id="freg-cards">
+          {freguesias.map((f) => {
+            const col = FREG_COLORS[f.id] || f.color;
+            return (
+              <button class="freg-card" data-id={f.id}>
+                <span class="freg-dot" style={`background:${col}`}></span>
+                <span class="freg-name">{f.shortName}</span>
+                <span class="freg-pop">{f.population.toLocaleString('pt-PT')} hab.</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
+
   </main>
 </Layout>
 
-<script define:vars={{ freguesiasData: freguesias }}>
-  const freguesiasMap = Object.fromEntries(freguesiasData.map(f => [f.id, f]));
-  
-  const panel = document.getElementById('detail-panel');
-  const panelDefault = document.getElementById('panel-default');
-  const panelDetail = document.getElementById('panel-detail');
-  const regions = document.querySelectorAll('.map-region');
-  const cards = document.querySelectorAll('.freg-card');
+<script define:vars={{ frequesiasData: freguesias, fregColors: FREG_COLORS }}>
+  const byId     = Object.fromEntries(frequesiasData.map(f => [f.id, f]));
+  const regions  = document.querySelectorAll('.map-region');
+  const cards    = document.querySelectorAll('.freg-card');
+  const tooltip  = document.getElementById('map-tooltip');
+  let   active   = null;
 
-  let activeRegion = null;
-  const tooltip = document.getElementById('map-tooltip');
-  const tooltipName = document.getElementById('tooltip-name');
-  const tooltipPop = document.getElementById('tooltip-pop');
+  const $ = id => document.getElementById(id);
 
-  function safeValue(val, fallback) {
-    return val && val !== 'VERIFICAR' ? val : fallback;
-  }
+  function fmt(n) { return Number(n).toLocaleString('pt-PT'); }
+  function safe(v) { return v && v !== 'VERIFICAR' ? v : 'A verificar'; }
 
-  function showDetail(freguesiaId) {
-    const f = freguesiasMap[freguesiaId];
+  function showDetail(id) {
+    const f = byId[id];
     if (!f) return;
+    const col = fregColors[id] || f.color;
 
-    const density = Math.round(f.population / f.area_km2);
+    $('detail-dot').style.background = col;
+    $('detail-name').textContent      = f.shortName;
+    $('detail-fullname').textContent  = f.name;
+    $('detail-pop').textContent       = fmt(f.population);
+    $('detail-area').textContent      = f.area_km2.toFixed(1) + ' km²';
+    $('detail-density').textContent   = fmt(Math.round(f.population / f.area_km2));
 
-    // Update panel
-    document.getElementById('detail-color-dot').style.backgroundColor = f.color;
-    document.getElementById('detail-name').textContent = f.shortName;
-    document.getElementById('detail-full-name').textContent = f.name;
-    document.getElementById('detail-population').textContent = f.population.toLocaleString('pt-PT');
-    document.getElementById('detail-area').textContent = f.area_km2.toFixed(1) + ' km²';
-    document.getElementById('detail-density').textContent = density.toLocaleString('pt-PT');
+    $('detail-presidente').textContent      = safe(f.presidente_junta);
+    $('detail-presidente-info').textContent = f.presidente_junta && f.presidente_junta !== 'VERIFICAR'
+      ? `${f.presidente_partido || ''} · ${f.mandato || ''}` : '';
 
-    // Presidente
-    const presidenteName = document.getElementById('detail-presidente-name');
-    const presidenteInfo = document.getElementById('detail-presidente-info');
-    if (f.presidente_junta && f.presidente_junta !== 'VERIFICAR') {
-      presidenteName.textContent = f.presidente_junta;
-      presidenteInfo.textContent = `${f.presidente_partido || ''} · ${f.mandato || ''}`;
-    } else {
-      presidenteName.textContent = 'A verificar';
-      presidenteInfo.textContent = '';
-    }
+    $('detail-parishes').innerHTML = (f.componentParishes || [])
+      .map(p => `<span class="parish-tag">${p}</span>`).join('');
 
-    // Address
-    const addressEl = document.getElementById('detail-address');
-    addressEl.textContent = safeValue(f.address, 'A verificar');
+    $('detail-address').textContent = safe(f.address);
 
-    // Phone
-    const phoneLink = document.getElementById('detail-phone');
-    if (f.phone && f.phone !== 'VERIFICAR') {
-      phoneLink.href = 'tel:' + f.phone.replace(/\s/g, '');
-      phoneLink.textContent = f.phone;
-      phoneLink.classList.remove('pointer-events-none');
-    } else {
-      phoneLink.textContent = 'A verificar';
-      phoneLink.href = '';
-      phoneLink.classList.add('pointer-events-none');
-    }
+    const phone = $('detail-phone');
+    phone.textContent = safe(f.phone);
+    phone.href = f.phone && f.phone !== 'VERIFICAR' ? 'tel:' + f.phone.replace(/\s/g,'') : '';
 
-    // Email
-    const emailLink = document.getElementById('detail-email');
-    if (f.email && f.email !== 'VERIFICAR') {
-      emailLink.href = 'mailto:' + f.email;
-      emailLink.textContent = f.email;
-      emailLink.classList.remove('pointer-events-none');
-    } else {
-      emailLink.textContent = 'A verificar';
-      emailLink.href = '';
-      emailLink.classList.add('pointer-events-none');
-    }
+    const email = $('detail-email');
+    email.textContent = safe(f.email);
+    email.href = f.email && f.email !== 'VERIFICAR' ? 'mailto:' + f.email : '';
 
-    // Website
-    const websiteLink = document.getElementById('detail-website');
-    if (f.website && f.website !== 'VERIFICAR') {
-      websiteLink.href = f.website;
-      websiteLink.textContent = f.website.replace('https://', '');
-      websiteLink.classList.remove('pointer-events-none');
-    } else {
-      websiteLink.textContent = 'A verificar';
-      websiteLink.href = '';
-      websiteLink.classList.add('pointer-events-none');
-    }
+    const site = $('detail-website');
+    site.textContent = f.website ? f.website.replace(/^https?:\/\//, '') : 'A verificar';
+    site.href = f.website || '';
 
-    // Component parishes
-    const parishesContainer = document.getElementById('detail-parishes');
-    parishesContainer.innerHTML = f.componentParishes
-      .map(p => `<span class="bg-[#1C1B1B] text-xs text-[#ccc] px-2 py-1 rounded">${p}</span>`)
-      .join('');
+    $('panel-default').style.display = 'none';
+    $('panel-detail').style.display  = 'block';
 
-    // Show detail, hide default
-    panelDefault.classList.add('hidden');
-    panelDetail.classList.remove('hidden');
-
-    // Highlight map region
     regions.forEach(r => {
-      if (r.dataset.id === freguesiaId) {
-        r.setAttribute('fill-opacity', '0.9');
-        r.setAttribute('stroke', f.color);
-        r.setAttribute('stroke-width', '3');
-      } else {
-        r.setAttribute('fill-opacity', '0.3');
-        r.setAttribute('stroke', '#1C1B1B');
-        r.setAttribute('stroke-width', '2');
-      }
+      const isSel = r.dataset.id === id;
+      r.setAttribute('fill-opacity', isSel ? '0.92' : active ? '0.3' : '0.62');
+      r.setAttribute('stroke',      isSel ? col : 'var(--color-paper)');
+      r.setAttribute('stroke-width', isSel ? '3' : '2');
     });
 
-    // Highlight card
-    cards.forEach(c => {
-      if (c.dataset.id === freguesiaId) {
-        c.classList.add('border-[#FF8C2F]');
-      } else {
-        c.classList.remove('border-[#FF8C2F]');
-      }
-    });
-
-    activeRegion = freguesiaId;
+    cards.forEach(c => c.classList.toggle('active', c.dataset.id === id));
+    active = id;
   }
 
   function resetMap() {
-    panelDefault.classList.remove('hidden');
-    panelDetail.classList.add('hidden');
+    $('panel-default').style.display = 'block';
+    $('panel-detail').style.display  = 'none';
     regions.forEach(r => {
-      r.setAttribute('fill-opacity', '0.6');
-      r.setAttribute('stroke', '#1C1B1B');
+      r.setAttribute('fill-opacity', '0.62');
+      r.setAttribute('stroke', 'var(--color-paper)');
       r.setAttribute('stroke-width', '2');
     });
-    cards.forEach(c => c.classList.remove('border-[#FF8C2F]'));
-    activeRegion = null;
+    cards.forEach(c => c.classList.remove('active'));
+    active = null;
   }
 
-  // Map region clicks
   regions.forEach(region => {
     region.addEventListener('click', () => {
       tooltip.style.opacity = '0';
-      const id = region.dataset.id;
-      if (id === activeRegion) {
-        resetMap();
-      } else {
-        showDetail(id);
-      }
+      region.dataset.id === active ? resetMap() : showDetail(region.dataset.id);
     });
-
-    // Keyboard accessibility
-    region.addEventListener('keydown', (e) => {
+    region.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        const id = region.dataset.id;
-        if (id === activeRegion) {
-          resetMap();
-        } else {
-          showDetail(id);
-        }
+        region.dataset.id === active ? resetMap() : showDetail(region.dataset.id);
       }
     });
-
-    region.addEventListener('mouseenter', (e) => {
-      if (region.dataset.id !== activeRegion) {
-        region.setAttribute('fill-opacity', '0.8');
-      }
-      // Show tooltip
-      const id = region.dataset.id;
-      const f = freguesiasMap[id];
+    region.addEventListener('mouseenter', e => {
+      if (region.dataset.id !== active) region.setAttribute('fill-opacity', '0.8');
+      const f = byId[region.dataset.id];
       if (f) {
-        tooltipName.textContent = f.shortName;
-        tooltipPop.textContent = f.population.toLocaleString('pt-PT') + ' hab. · ' + f.area_km2.toFixed(1) + ' km²';
+        $('tooltip-name').textContent = f.shortName;
+        $('tooltip-sub').textContent  = fmt(f.population) + ' hab. · ' + f.area_km2.toFixed(1) + ' km²';
         tooltip.style.opacity = '1';
       }
     });
-
-    region.addEventListener('mousemove', (e) => {
-      tooltip.style.left = (e.clientX + 12) + 'px';
-      tooltip.style.top = (e.clientY - 8) + 'px';
+    region.addEventListener('mousemove', e => {
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top  = (e.clientY - 10) + 'px';
     });
-
     region.addEventListener('mouseleave', () => {
-      if (region.dataset.id !== activeRegion) {
-        region.setAttribute('fill-opacity', '0.6');
-      }
+      if (region.dataset.id !== active) region.setAttribute('fill-opacity', '0.62');
       tooltip.style.opacity = '0';
     });
   });
 
-  // Card clicks
   cards.forEach(card => {
-    card.addEventListener('click', () => {
-      const id = card.dataset.id;
-      if (id === activeRegion) {
-        resetMap();
-      } else {
-        showDetail(id);
-      }
-    });
+    card.addEventListener('click', () =>
+      card.dataset.id === active ? resetMap() : showDetail(card.dataset.id)
+    );
   });
 </script>

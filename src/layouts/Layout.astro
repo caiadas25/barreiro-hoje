@@ -3,21 +3,54 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
+  activeNav?: 'hoje' | 'arquivo' | 'mapa';
 }
 
-const { title } = Astro.props;
+const { title, activeNav } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="pt">
+<html lang="pt" data-theme="emblem">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content="Barreiro Digest - Notícias diárias do Barreiro" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta name="description" content="Barreiro Digest — Notícias diárias do município do Barreiro" />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen bg-[#1C1B1B] text-white">
+  <body style="min-height:100vh;display:flex;flex-direction:column;">
+
+    <header class="site-header">
+      <div class="wrap-wide site-header-inner">
+        <a href="/" class="brand">
+          <img src="/favicon.svg" alt="" class="brand-logo" />
+          <div>
+            <div class="brand-name">Barreiro Digest</div>
+            <div class="brand-sub">Notícias Diárias</div>
+          </div>
+        </a>
+        <nav class="site-nav">
+          <a href="/"     class={`nav-link${activeNav === 'hoje'    ? ' active' : ''}`}>Hoje</a>
+          <a href="/"     class={`nav-link${activeNav === 'arquivo' ? ' active' : ''}`}>Arquivo</a>
+          <a href="/mapa" class={`nav-link${activeNav === 'mapa'    ? ' active' : ''}`}>Mapa</a>
+        </nav>
+      </div>
+    </header>
+
     <slot />
+
+    <footer class="site-footer">
+      <div class="wrap-wide site-footer-inner">
+        <span class="brand-name" style="font-size:17px;">Barreiro Digest</span>
+        <div class="footer-sources">
+          <span>cm-barreiro.pt</span>
+          <span>Google News RSS</span>
+          <span>Contratos públicos</span>
+        </div>
+      </div>
+    </footer>
+
   </body>
 </html>
