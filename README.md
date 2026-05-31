@@ -1,4 +1,4 @@
-# Barreiro Digest
+# Barreiro Hoje
 
 Notícias diárias do Barreiro, automaticamente publicadas.
 
