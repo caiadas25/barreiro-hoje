@@ -6,6 +6,7 @@ import { Spot, SERVING_LABELS } from "@/lib/types";
 import { formatPrice, stars } from "@/lib/format";
 import ShareButtons from "@/components/ShareButtons";
 import PickMap from "@/components/PickMap";
+import { getSiteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +50,7 @@ export default async function SpotPage({
   const spot = await getSpot(id);
   if (!spot) notFound();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const shareUrl = `${siteUrl}/spot/${spot.id}`;
+  const shareUrl = `${getSiteUrl()}/spot/${spot.id}`;
   const price = formatPrice(spot.price);
 
   return (
